@@ -18,7 +18,7 @@ resource "aws_sns_topic_subscription" "email" {
 }
 
 resource "aws_sqs_queue" "processing" {
-  name                      = "${var.project_name}-processing-queue"
+  name                       = "${var.project_name}-processing-queue"
   visibility_timeout_seconds = 60
 }
 
@@ -35,10 +35,10 @@ resource "aws_sqs_queue_policy" "sns_to_sqs" {
     Version = "2012-10-17"
     Statement = [
       {
-        Effect = "Allow"
+        Effect    = "Allow"
         Principal = "*"
-        Action   = "sqs:SendMessage"
-        Resource = aws_sqs_queue.processing.arn
+        Action    = "sqs:SendMessage"
+        Resource  = aws_sqs_queue.processing.arn
         Condition = {
           ArnEquals = {
             "aws:SourceArn" = aws_sns_topic.file_events.arn
@@ -204,8 +204,8 @@ resource "aws_s3_bucket_notification" "incoming_notification" {
 
 
 resource "aws_lambda_event_source_mapping" "sqs_to_lambda" {
-  event_source_arn  = aws_sqs_queue.processing.arn
-  function_name     = aws_lambda_function.sqs_consumer.arn
-  batch_size        = 10
-  enabled           = true
+  event_source_arn = aws_sqs_queue.processing.arn
+  function_name    = aws_lambda_function.sqs_consumer.arn
+  batch_size       = 10
+  enabled          = true
 }
