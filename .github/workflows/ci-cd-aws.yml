@@ -9,7 +9,7 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,20 +24,20 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # ---- ZIP LAMBDA FILES ----
+      # 👉 YE DONO STEP ZAROORI HAIN (ZIP BANANE KE LIYE)
       - name: Zip ingestion lambda
         run: |
           cd lambda/ingestion
           pip install -r requirements.txt -t .
-          zip -r ../../ingestion.zip .
-      
+          zip -r ../ingestion.zip .
+
       - name: Zip sqs consumer lambda
         run: |
           cd lambda/sqs_consumer
           pip install -r requirements.txt -t .
-          zip -r ../../sqs_consumer.zip .
+          zip -r ../sqs_consumer.zip .
 
-      # ---- TERRAFORM ----
+      # 👉 AB TERRAFORM WALI FILES EXIST KARTI HAIN
       - name: Terraform Init
         working-directory: infra
         run: terraform init
