@@ -9,10 +9,7 @@ on:
 jobs:
   terraform:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: infra
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -27,29 +24,38 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
+      # ---- ZIP LAMBDA FILES ----
       - name: Zip ingestion lambda
         run: |
-          cd ..
           cd lambda/ingestion
           pip install -r requirements.txt -t .
-          zip -r ../ingestion.zip .
-          cd ../sqs_consumer
+          zip -r ../../ingestion.zip .
+      
+      - name: Zip sqs consumer lambda
+        run: |
+          cd lambda/sqs_consumer
           pip install -r requirements.txt -t .
-          zip -r ../sqs_consumer.zip .
+          zip -r ../../sqs_consumer.zip .
 
+      # ---- TERRAFORM ----
       - name: Terraform Init
+        working-directory: infra
         run: terraform init
 
       - name: Terraform Fmt
+        working-directory: infra
         run: terraform fmt -check
 
       - name: Terraform Validate
+        working-directory: infra
         run: terraform validate
 
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
+        working-directory: infra
         run: terraform plan -input=false
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: infra
         run: terraform apply -auto-approve -input=false -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
