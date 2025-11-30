@@ -24,7 +24,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      # 👉 YE DONO STEP ZAROORI HAIN (ZIP BANANE KE LIYE)
+     
       - name: Zip ingestion lambda
         run: |
           cd lambda/ingestion
@@ -37,7 +37,7 @@ jobs:
           pip install -r requirements.txt -t .
           zip -r ../sqs_consumer.zip .
 
-      # 👉 AB TERRAFORM WALI FILES EXIST KARTI HAIN
+      
       - name: Terraform Init
         working-directory: infra
         run: terraform init
@@ -53,7 +53,8 @@ jobs:
       - name: Terraform Plan
         if: github.event_name == 'pull_request'
         working-directory: infra
-        run: terraform plan -input=false
+        run: terraform plan -input=false -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
+
 
       - name: Terraform Apply
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
