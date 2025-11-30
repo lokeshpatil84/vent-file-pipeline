@@ -1,0 +1,62 @@
+name: Terraform CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+     
+      - name: Zip ingestion lambda
+        run: |
+          cd lambda/ingestion
+          pip install -r requirements.txt -t .
+          zip -r ../ingestion.zip .
+
+      - name: Zip sqs consumer lambda
+        run: |
+          cd lambda/sqs_consumer
+          pip install -r requirements.txt -t .
+          zip -r ../sqs_consumer.zip .
+
+      
+      - name: Terraform Init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform Fmt
+        working-directory: infra
+        run: terraform fmt 
+
+      - name: Terraform Validate
+        working-directory: infra
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: github.event_name == 'pull_request'
+        working-directory: infra
+        run: terraform plan -input=false -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
+
+
+      - name: Terraform Apply
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: infra
+        run: terraform apply -auto-approve -input=false -var="notification_email=${{ secrets.NOTIFICATION_EMAIL }}"
